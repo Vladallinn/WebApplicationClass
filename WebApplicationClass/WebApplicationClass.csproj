@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <Reference Include="ClassLibraryNET">
-      <HintPath>..\..\WebApplicationNET\WebApplicationNET\ExternDll\ClassLibraryNET.dll</HintPath>
+      <HintPath>..\..\..\..\source\repos\WebApplicationNET\WebApplicationNET\NewDll\ClassLibraryNET.dll</HintPath>
     </Reference>
   </ItemGroup>
 
