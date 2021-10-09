@@ -9,6 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using WebApplicationClass.Controllers;
+using WebApplicationClass.Managers;
 
 namespace WebApplicationClass
 {
@@ -24,8 +27,12 @@ namespace WebApplicationClass
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<AppDbContext>(options => 
+                options.UseSqlServer(Configuration.GetConnectionString("DBConnection")));
             services.AddMemoryCache();
             services.AddControllers();
+            services.AddScoped<BookManager, BookManager>();
+            services.AddHttpContextAccessor();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

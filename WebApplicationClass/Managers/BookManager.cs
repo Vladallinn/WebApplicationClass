@@ -4,33 +4,39 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClassLibraryNET;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApplicationClass.Managers
 {
     public class BookManager
     {
-        private static List<Book> _books = new List<Book>()
-        {
-                new Book("Antic Hay", "Aldous Huxley", 300, 0),
-                new Book("As I Lay Dying", "William Faulkner", 350, 1),
-                new Book("Death Be Not Proud", "John Gunther", 400, 2),
-                new Book("If Not Now, When?", "Primo Levi", 450,3)
-        };
+        //private static List<Book> _books = new List<Book>()
+        //{
+        //        new Book("Antic Hay", "Aldous Huxley", 300, 0),
+        //        new Book("As I Lay Dying", "William Faulkner", 350, 1),
+        //        new Book("Death Be Not Proud", "John Gunther", 400, 2),
+        //        new Book("If Not Now, When?", "Primo Levi", 450,3)
+        //};
+        private readonly AppDbContext appDbContext;
 
-        public List<Book> GetAll()
+        public BookManager(AppDbContext appDbContext)
         {
-            return new List<Book>(_books);
+            this.appDbContext = appDbContext;
         }
 
-        public ActionResult<Book> GetById(int ibs)
+        public async Task<IEnumerable<Book>> GetAll()
         {
-            Book book = _books.FirstOrDefault(s => s.ISBN13 == ibs);
-            return book;
+            return await appDbContext.Books.ToListAsync();
         }
 
-        public Book UpdateBook(Book book)
+        public async Task<Book> GetById(int ibs)
         {
-            var result = _books.FirstOrDefault(s => s.ISBN13 == book.ISBN13);
+            return await appDbContext.Books.FirstOrDefaultAsync(s => s.ISBN13 == ibs);
+        }
+
+        public async Task<Book> UpdateBook(Book book)
+        {
+            var result = await appDbContext.Books.FirstOrDefaultAsync(s => s.ISBN13 == book.ISBN13);
 
             if (result is not null)
             {
@@ -38,42 +44,27 @@ namespace WebApplicationClass.Managers
                 result.Author = book.Author;
                 result.PageNumber = book.PageNumber;
 
-                return new Book();
-            }
-            return null;
-        }
+                await appDbContext.SaveChangesAsync();
 
-        public Book AddBook(Book boook)
-        {
-            bool valid = true;
-            foreach (Book item in _books)
-            {
-                if (item.ISBN13 == boook.ISBN13)
-                { 
-                    valid = false;
-                    return null;
-                }
-            }
-            if (valid)
-            {
-                Book book = new Book();
-                _books.Add(book);
-                return book;
-            }
-
-            return null;
-
-        }
-
-        public Book DeleteBook(int ibs)
-        {
-            var result = _books.FirstOrDefault(s => s.ISBN13 == ibs);
-            if (result is not null)
-            {
-                _books.Remove(result);
                 return result;
             }
+            return null;
+        }
 
+        public void AddBook(Book book)
+        { 
+            appDbContext.Books.Add(book);
+            appDbContext.SaveChanges();
+        }
+
+        public async Task<Book> DeleteBook(int ibs)
+        {
+            var result = await appDbContext.Books.FirstOrDefaultAsync(s => s.ISBN13 == ibs);
+            if (result is not null)
+            {
+                appDbContext.Books.Remove(result);
+                await appDbContext.SaveChangesAsync();
+            }
             return null;
         }
 

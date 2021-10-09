@@ -15,53 +15,68 @@ namespace WebApplicationClass.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
-        private BookManager _manager = new BookManager();
+        private readonly BookManager _manager;
+
+        public BooksController(BookManager manager)
+        {
+            _manager = manager;
+        }
+        
         // GET: api/Books
         [HttpGet]
-        public IEnumerable<Book> Get()
-        {
-            return _manager.GetAll();
-        }
-
-        // GET api/Books/0 or 1 or 2 or 3
-        [HttpGet("{ibs:int}")]
-        public async Task<ActionResult<Book>> GetBook(int ibs)
+        public async Task<ActionResult> GetBooks()
         {
             try
             {
-                var result = _manager.GetById(ibs);
+                return Ok(await _manager.GetAll());
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error with data from the database");
+            }
+            
+        }
+
+        //GET api/Books/0 or 1 or 2 or 3
+        [HttpGet("{ibs:int}")]
+        public async Task<ActionResult<Book>> GetBookById(int ibs)
+        {
+            try
+            {
+                var result = await _manager.GetById(ibs);
 
                 if (result is null)
                 {
                     return NotFound();
                 }
-
                 return result;
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, 
+                return StatusCode(StatusCodes.Status500InternalServerError,
                     "Error retrieving data from the database");
             }
         }
 
-        //[HttpPost]
-        //public async Task<ActionResult<Book>> CreateBook(Book book)
-        //{
-        //    try
-        //    {
-        //        if (book is null)
-        //        {
-        //            return BadRequest();
-        //        }
-        //        return new ActionResult<Book>(book);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            "Error retrieving data from the database");
-        //    }
-        //}
+        [HttpPost("")]
+        public void CreateBook([FromBody]Book book)
+        {
+            try
+            {
+                if (book is null)
+                { 
+                    BadRequest();
+                }
+                _manager.AddBook(book);
+
+            
+            }
+            catch (Exception)
+            {
+                StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
 
         [HttpPut("{ibs:int}")]
         public async Task<ActionResult<Book>> UpdateBook(int ibs, Book book)
@@ -70,45 +85,15 @@ namespace WebApplicationClass.Controllers
             {
                 if (ibs != book.ISBN13)
                 {
-                    return BadRequest("Book ID mismatch");
+                    return BadRequest("Book ISBN mismatch");
                 }
-
-                var bookUpdate = _manager.GetById(ibs);
+                var bookUpdate = await _manager.GetById(ibs);
                 if (bookUpdate is null)
                 {
                     return NotFound($"Book with Id = {ibs} not found");
                 }
 
-                return _manager.UpdateBook(book);
-                return null;
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error retrieving data from the database");
-            }
-        }
-
-        // POST api/<BooksController>
-        [HttpPost]
-        public void Post([FromBody] Book book)
-        {
-            
-
-        }
-
-
-        // DELETE api/<BooksController>/5
-        [HttpPost]
-        public async Task<ActionResult<Book>> CreateBook(Book book)
-        {
-            try
-            {
-                if (book is null)
-                {
-                    return BadRequest();
-                } 
-                return _manager.AddBook(book);
+                return await _manager.UpdateBook(book);
             }
             catch (Exception)
             {
@@ -118,19 +103,19 @@ namespace WebApplicationClass.Controllers
         }
 
 
-        // DELETE api/<BooksController>/5
+        //DELETE api/<BooksController>/5
         [HttpDelete("{ibs:int}")]
         public async Task<ActionResult<Book>> DeleteBook(int ibs)
         {
             try
             {
-                var deleteBook = _manager.GetById(ibs);
+                var deleteBook = await _manager.GetById(ibs);
                 if (deleteBook is null)
                 {
                     return NotFound($"Book with Id = {ibs} not found");
                 }
 
-                return _manager.DeleteBook(ibs);
+                return await _manager.DeleteBook(ibs);
             }
             catch (Exception)
             {
